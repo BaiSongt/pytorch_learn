@@ -1,0 +1,69 @@
+# Python基础忽略规则
+__pycache__/
+*.py[cod]*
+*$py.class
+dist/
+build/
+*.egg-info/
+pip-wheel-metadata/
+
+# 虚拟环境
+venv/
+.venv/
+env/
+ENV/
+__env__/
+
+# PyTorch相关文件
+*.pt
+*.pth
+*.pth.tar
+*.safetensors
+runs/              # TensorBoard日志
+torch_cache/       # PyTorch缓存目录
+__torch__/
+torch_model_archive/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDE配置
+.vscode/
+.idea/
+.pycharm/
+.vs/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+ Desktop.ini
+
+# 数据集与模型（根据需要调整）
+# data/              # 大型数据集
+# models/            # 预训练模型
+
+# 日志与临时文件
+*.log
+*.tmp
+*.swp
+*.bak
+replay.log
+
+# 依赖管理
+Pipfile.lock
+poetry.lock
+__pypackages__/
+
+# Docker相关（如使用）
+.dockerignore
+.dockerenv
+
+# 其他
+.DS_Store
+coverage/
+htmlcov/
+.nox/
+.tox/
+.env
+
+datas
