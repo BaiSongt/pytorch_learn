@@ -2,10 +2,11 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import numpy as np
 
-# --- 前言 --- 
+# --- 前言 ---
 # 训练Transformer模型有一些独特的挑战，例如模型巨大、容易过拟合、对学习率敏感等。
 # “Attention Is All You Need”论文不仅提出了模型架构，还介绍了一套行之有效的优化策略，
 # 这些策略对于成功训练Transformer至关重要。
@@ -27,7 +28,7 @@ print("-"*30)
 # --- 2. 自定义学习率调度 (Custom Learning Rate Schedule) ---
 # 这是训练Transformer最关键的技巧之一。
 # 公式: lrate = d_model^(-0.5) * min(step_num^(-0.5), step_num * warmup_steps^(-1.5))
-# 
+#
 # 它包含两个阶段：
 # 1. **线性预热 (Warmup)**: 在前 `warmup_steps` 步，学习率从0线性增加。
 # 2. **平方根倒数衰减 (Decay)**: 在预热之后，学习率与训练步数的平方根成反比衰减。
@@ -44,9 +45,9 @@ class CustomLRScheduler:
         self.current_step += 1
         arg1 = self.current_step ** -0.5
         arg2 = self.current_step * (self.warmup_steps ** -1.5)
-        
+
         lr = (self.d_model ** -0.5) * min(arg1, arg2)
-        
+
         for param_group in self.optimizer.param_groups:
             param_group['lr'] = lr
 
@@ -97,17 +98,17 @@ class LabelSmoothingLoss(nn.Module):
     def forward(self, prediction_logits, target_indices):
         # prediction_logits: (batch_size, num_classes)
         # target_indices: (batch_size)
-        
+
         # 1. 将模型的logits转换为log概率
         log_probs = F.log_softmax(prediction_logits, dim=-1)
-        
+
         # 2. 创建平滑后的目标分布
         # a. 创建一个one-hot编码的目标张量
         true_dist = torch.zeros_like(log_probs)
         true_dist.fill_(self.smoothing / (self.num_classes - 1))
         # b. 将正确类别的位置填充为 1 - smoothing
         true_dist.scatter_(1, target_indices.unsqueeze(1), 1.0 - self.smoothing)
-        
+
         # 3. 计算KL散度损失
         return self.criterion(log_probs, true_dist)
 

@@ -1,8 +1,9 @@
 
 import torch
 import torch.nn as nn
+import math
 
-# --- 前言 --- 
+# --- 前言 ---
 # Transformer的编码器 (Encoder) 是一个由N个相同的“编码器层 (Encoder Layer)”堆叠而成的结构。
 # 它的主要作用是接收一个经过词嵌入和位置编码的序列，然后为序列中的每一个token
 # 生成一个富含上下文信息的、深度的表示（representation）。
@@ -53,19 +54,19 @@ class EncoderLayer(nn.Module):
 
     def forward(self, src, src_mask=None):
         # src shape: (batch_size, src_len, d_model)
-        
+
         # 1. 多头自注意力子层
         # Q, K, V都来自同一个src
-        attn_output, _ = self.self_attn(src, src, src, key_padding_mask=src_mask)
+        attn_output, _ = self.self_attn.forward(src, src, src, key_padding_mask=src_mask)
         # 残差连接和层归一化
         # x = x + dropout(sublayer(x))
         src = self.norm1(src + self.dropout(attn_output))
-        
+
         # 2. 位置前馈网络子层
         ff_output = self.feed_forward(src)
         # 残差连接和层归一化
         src = self.norm2(src + self.dropout(ff_output))
-        
+
         return src
 
 # --- 4. 完整的编码器 (Encoder) ---
@@ -78,7 +79,7 @@ class Encoder(nn.Module):
         self.embedding = nn.Embedding(vocab_size, d_model)
         # 复用day1的位置编码模块 (这里简化实现)
         self.pos_encoding = nn.Parameter(torch.zeros(1, max_len, d_model))
-        self.layers = nn.ModuleList([EncoderLayer(d_model, num_heads, d_ff, dropout) 
+        self.layers = nn.ModuleList([EncoderLayer(d_model, num_heads, d_ff, dropout)
                                      for _ in range(num_layers)])
         self.dropout = nn.Dropout(dropout)
 
@@ -88,11 +89,11 @@ class Encoder(nn.Module):
         embedded = self.embedding(src) * math.sqrt(self.d_model) # 乘以sqrt(d_model)是论文中的一个细节
         pos_encoded = embedded + self.pos_encoding[:, :src.size(1)]
         src_encoded = self.dropout(pos_encoded)
-        
+
         # 2. 逐层通过N个编码器层
         for layer in self.layers:
             src_encoded = layer(src_encoded, src_mask)
-            
+
         return src_encoded
 
 # --- 5. 使用编码器 ---

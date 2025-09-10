@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import math
 
-# --- 前言 --- 
+# --- 前言 ---
 # 我们将把之前实现的编码器和解码器组装成一个完整的Transformer模型。
 # 这个模型将能够处理一个序列到序列的任务，例如机器翻译。
 
@@ -71,16 +71,16 @@ class PositionalEncoding(nn.Module):
 class Transformer(nn.Module):
     def __init__(self, src_vocab_size, trg_vocab_size, d_model, num_layers, num_heads, d_ff, max_len, dropout=0.1):
         super().__init__()
-        
+
         # 词嵌入和位置编码
         self.src_embedding = nn.Embedding(src_vocab_size, d_model)
         self.trg_embedding = nn.Embedding(trg_vocab_size, d_model)
         self.pos_encoding = PositionalEncoding(d_model, max_len)
-        
+
         # 编码器和解码器
         self.encoder_layers = nn.ModuleList([EncoderLayer(d_model, num_heads, d_ff, dropout) for _ in range(num_layers)])
         self.decoder_layers = nn.ModuleList([DecoderLayer(d_model, num_heads, d_ff, dropout) for _ in range(num_layers)])
-        
+
         # 最终的线性输出层
         self.fc_out = nn.Linear(d_model, trg_vocab_size)
         self.dropout = nn.Dropout(dropout)
@@ -100,23 +100,23 @@ class Transformer(nn.Module):
     def forward(self, src, trg, src_pad_idx=0):
         # src: (batch_size, src_len)
         # trg: (batch_size, trg_len)
-        
+
         # 1. 创建掩码
         src_padding_mask = self.create_src_padding_mask(src, src_pad_idx)
         trg_look_ahead_mask = self.create_trg_look_ahead_mask(trg)
-        
+
         # 2. 编码器部分
         src_embedded = self.dropout(self.pos_encoding(self.src_embedding(src) * math.sqrt(self.d_model)))
         enc_src = src_embedded
         for layer in self.encoder_layers:
             enc_src = layer(enc_src, src_padding_mask)
-        
+
         # 3. 解码器部分
         trg_embedded = self.dropout(self.pos_encoding(self.trg_embedding(trg) * math.sqrt(self.d_model)))
         dec_output = trg_embedded
         for layer in self.decoder_layers:
             dec_output = layer(dec_output, enc_src, trg_look_ahead_mask, src_padding_mask)
-            
+
         # 4. 最终输出
         output = self.fc_out(dec_output)
         return output
